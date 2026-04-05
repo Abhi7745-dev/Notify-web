@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    
+</head>
+<body>
+   <div class="auth-container">
+    <div class="auth-card">
+
+        <h1>NOTIFY</h1>
+        <p class="tagline">Welcome back 👋</p>
+
+        <input type="email" id="loginEmail" placeholder="Enter email">
+        <input type="password" id="loginPassword" placeholder="Enter password">
+
+        <button onclick="login()">Login</button>
+
+        <p class="switch">
+            Don’t have an account?
+            <a href="project2signup.html">Sign up</a>
+        </p>
+
+    </div>
+</div>
+<script type="module">
+
+// import firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+// 🔑 paste YOUR config here
+const firebaseConfig = {
+  apiKey: "AIzaSyDeb23nriXd2oYwv-nejYMvydLn0mv7_Gw",
+  authDomain: "notify-378c4.firebaseapp.com",
+  projectId: "notify-378c4",
+   storageBucket: "notify-378c4.firebasestorage.app",
+  messagingSenderId: "357240952115",
+  appId: "1:357240952115:web:5b703693b77fce577c9a46",
+  measurementId: "G-J4JQZZLJ5C"
+};
+
+// initialize firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+// 👇 LOGIN FUNCTION
+window.login = async function(){
+    const email = document.getElementById("loginEmail").value;
+    const password = document.getElementById("loginPassword").value;
+
+    if(!email || !password){
+        alert("Please fill all fields");
+        return;
+    }
+
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
+
+        alert("Login successful ✅");
+
+        // redirect to your main app
+        window.location.href = "project2.html";
+
+    } catch (error) {
+        alert("Invalid email or password ❌");
+    }
+}
+
+</script>
+<style>
+    /* RESET */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #0f1117;
+    color: #e8e6f0;
+    height: 100vh;
+}
+
+/* CENTER */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+/* CARD */
+.auth-card {
+    width: 350px;
+    padding: 40px;
+    background: #161820;
+    border-radius: 15px;
+    border: 1px solid rgba(255,255,255,0.07);
+    text-align: center;
+    box-shadow: 0 0 25px rgba(0,0,0,0.6);
+}
+
+/* LOGO */
+.auth-card h1 {
+    color: #f5a623;
+    letter-spacing: 3px;
+    text-shadow: 0 0 20px rgba(245,166,35,0.4);
+    margin-bottom: 10px;
+}
+
+/* SUBTEXT */
+.tagline {
+    color: #5a5870;
+    font-size: 14px;
+    margin-bottom: 25px;
+}
+
+/* INPUT */
+.auth-card input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    background: #1d1f2a;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 8px;
+    color: #e8e6f0;
+}
+
+/* FOCUS */
+.auth-card input:focus {
+    outline: none;
+    border: 1px solid rgba(245,166,35,0.4);
+}
+
+/* BUTTON */
+.auth-card button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    background: #f5a623;
+    color: #0f1117;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    box-shadow: 2px 2px 16px rgba(244,207,129,0.4);
+}
+
+/* HOVER */
+.auth-card button:hover {
+    background: #f3b757;
+    cursor: pointer;
+}
+
+/* LINK */
+.auth-card .switch {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #5a5870;
+}
+
+.auth-card .switch a {
+    color: #f5a623;
+    text-decoration: none;
+}
+</style>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div class="auth-container">
+    <div class="auth-card">
+        <h1>NOTIFY</h1>
+        <p class="tagline">Create your account 🚀</p>
+        <input type="email" id="signupEmail" placeholder="Enter email">
+        <input type="password" id="signupPassword" placeholder="Enter password">
+        <button onclick="signup()">Sign Up</button>
+        <p class="switch">
+            Already have an account?
+            <a href="project2login.html">Login</a>
+        </p>
+    </div>
+</div>
+ 
+<script type="module">
+ 
+// ALL imports at the top
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, serverTimestamp }
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+ 
+const firebaseConfig = {
+  apiKey: "AIzaSyDeb23nriXd2oYwv-nejYMvydLn0mv7_Gw",
+  authDomain: "notify-378c4.firebaseapp.com",
+  projectId: "notify-378c4",
+  storageBucket: "notify-378c4.firebasestorage.app",
+  messagingSenderId: "357240952115",
+  appId: "1:357240952115:web:5b703693b77fce577c9a46",
+  measurementId: "G-J4JQZZLJ5C"
+};
+ 
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+ 
+window.signup = async function(){
+    const email = document.getElementById("signupEmail").value;
+    const password = document.getElementById("signupPassword").value;
+ 
+    if(!email || !password){
+        alert("Please fill all fields");
+        return;
+    }
+ 
+    if(password.length < 6){
+        alert("Password must be at least 6 characters");
+        return;
+    }
+ 
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+ 
+        await setDoc(doc(db, "users", user.uid), {
+            email: user.email,
+            registeredAt: serverTimestamp()
+        });
+ 
+        alert("Account created successfully!");
+        window.location.href = "project2login.html";
+ 
+    } catch (error) {
+        alert(error.message);
+    }
+}
+ 
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: Arial, sans-serif; background-color: #0f1117; color: #e8e6f0; height: 100vh; }
+.auth-container { display: flex; justify-content: center; align-items: center; height: 100%; }
+.auth-card { width: 360px; padding: 40px 30px; background-color: #161820; border: 1px solid rgba(255,255,255,0.07); border-radius: 15px; text-align: center; box-shadow: 0 0 30px rgba(0,0,0,0.6); animation: fadeIn 0.5s ease; }
+.auth-card h1 { color: #f5a623; letter-spacing: 3px; text-shadow: 0 0 20px rgba(245,166,35,0.4); margin-bottom: 8px; }
+.tagline { font-size: 14px; color: #5a5870; margin-bottom: 25px; }
+.auth-card input { width: 100%; padding: 12px; margin: 10px 0; background-color: #1d1f2a; border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; color: #e8e6f0; font-size: 14px; transition: 0.2s; }
+.auth-card input:focus { outline: none; border: 1px solid rgba(245,166,35,0.5); box-shadow: 0 0 10px rgba(245,166,35,0.2); }
+.auth-card button { width: 100%; padding: 12px; margin-top: 15px; background-color: #f5a623; color: #0f1117; border: none; border-radius: 8px; font-weight: bold; transition: all 0.2s; box-shadow: 2px 2px 16px rgba(244,207,129,0.4); }
+.auth-card button:hover { background-color: #f3b757; box-shadow: 2px 2px 20px rgba(244,207,129,0.6); transform: translateY(-1px); cursor: pointer; }
+.switch { margin-top: 20px; font-size: 14px; color: #5a5870; }
+.auth-card .switch a { color: #f5a623; text-decoration: none; font-weight: bold; transition: 0.2s; }
+.auth-card .switch a:hover { color: #f3b757; text-shadow: 0 0 10px rgba(245,166,35,0.6); }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</body>
+</html>
+ 

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>notes-web</title>
+    <link rel="stylesheet" href="project2.css">
+</head>
+<body>
+
+<div class="aidialog" id="aiDialog" style="display:none;">
+    <div class="ai-firbox">
+        <div class="ai-header">
+            <span class="ai-header-title">✨ AI Assistant</span>
+            <button class="CN" style="margin:0;" onclick="closeAI()">X</button>
+        </div>
+        <div class="ai-note-preview">
+            <span class="ai-label">NOTE</span>
+            <p id="aiNoteTitle" class="ai-note-title"></p>
+        </div>
+        <div class="ai-actions">
+            <button class="EN ai-action-btn" onclick="summarizeNote()">📋 Summarize</button>
+            <button class="EN ai-action-btn" onclick="showAskBox()">❓ Ask a Question</button>
+        </div>
+        <div id="askBox" class="ai-ask-box" style="display:none;">
+            <input type="text" id="userQuestion" class="ai-input" placeholder="Ask something about this note...">
+            <button class="EN ai-ask-btn" onclick="askQuestion()">Ask →</button>
+        </div>
+        <p id="aiLoading" class="ai-loading" style="display:none;">⏳ Thinking...</p>
+        <div id="aiResponse" class="ai-response-box" style="display:none;">
+            <span class="ai-label">AI RESPONSE</span>
+            <p id="aiResponseText" class="ai-response-text"></p>
+        </div>
+    </div>
+</div>
+
+    <div class="navbar">
+       <div class="logo">NOTIFY</div>
+        <p class="navbar-quote">"Every great story starts with a single note."</p>
+    </div>
+    <div class="verticalbarinfo">
+        <div class="start">
+            <p id="notes">Notes</p>
+            <button class="newnote" onclick="opendialog()">+ New Note</button>
+        </div>
+    </div>
+    <div id="notesList"></div>
+       
+    <div class="main">
+        <div class="empty-state">
+            <div class="empty-state">
+                <div class="empty-top">
+                    <h1 class="empty-heading">Welcome to <span>NOTIFY</span></h1>
+                    <p class="empty-sub">Your thoughts, organized beautifully.</p>
+                </div>
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <p class="stat-number" id="totalNotes">0</p>
+                        <p class="stat-label">Total Notes</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-number" id="totalWords">0</p>
+                        <p class="stat-label">Total Words</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-number" id="lastSaved">—</p>
+                        <p class="stat-label">Last Saved</p>
+                    </div>
+                </div>
+                <div class="empty-hint">
+                    <p>📝 Click <span>+ New Note</span> to get started</p>
+                    <p>📂 Click any note on the left to read it</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <dialog class="dialogbox">
+        <div class="db">
+            <div class="first-box">
+                <span class="firstbox-text">New Note</span>
+                <button class="firstbox-button" onclick="closedialog()">X</button>
+            </div>
+            <form id="notesform">
+                <div class="second-box">
+                    <span class="secondbox-text1">TITLE</span>
+                    <input type="text" id="title-box" placeholder="Give your note a title...">
+                    <span class="secondbox-text2">CONTENT</span>
+                    <textarea id="content-box" rows="100" placeholder="Start writing..."></textarea>
+                </div>
+                <div class="third-box">
+                    <button class="cancel-btn" onclick="closedialog()">CANCEL</button>
+                    <button type="button" class="cnbtn" onclick="savenote()">CREATE NOTE✔️</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+    
+    <dialog class="opendialog">
+        <div class="firbox">
+            <button class="CN" onclick="closenote()">X</button>
+            <div class="secbox">
+                <p class="readtitle">title</p>
+                <p class="readcontent">content</p>
+            </div>
+            <button class="EN" onclick="editNote()">Edit Note</button>
+            <button class="DN" onclick="deleteNote()">Delete Note</button>
+            <button class="OA" onclick="openAI()">✨ AI</button>
+        </div>
+    </dialog>
+
+
+<!-- ===================== FIREBASE + APP SCRIPT ===================== -->
+<script type="module">
+
+    // ✅ All imports at top
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // ✅ Your Firebase config
+    const firebaseConfig = {
+        apiKey: "AIzaSyDeb23nriXd2oYwv-nejYMvydLn0mv7_Gw",
+        authDomain: "notify-378c4.firebaseapp.com",
+        projectId: "notify-378c4",
+        storageBucket: "notify-378c4.firebasestorage.app",
+        messagingSenderId: "357240952115",
+        appId: "1:357240952115:web:5b703693b77fce577c9a46"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+    let notes = [];
+    let currentNoteIndex = 0;
+
+    // ✅ Check login — redirect to login page if not logged in
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            currentUser = user;
+            loadNotes();
+        } else {
+            window.location.href = "project2login.html";
+        }
+    });
+
+    // ✅ Load notes from Firestore
+    async function loadNotes() {
+        const snapshot = await getDocs(collection(db, "users", currentUser.uid, "notes"));
+        notes = [];
+        snapshot.forEach(d => notes.push({ id: d.id, ...d.data() }));
+        renderNotes();
+        updateStats();
+    }
+
+    // ✅ Save note to Firestore
+    async function savenote() {
+        const title = document.getElementById("title-box").value.trim();
+        const content = document.getElementById("content-box").value.trim();
+        if (!title || !content) { alert("Please fill in both title and content."); return; }
+
+        await addDoc(collection(db, "users", currentUser.uid, "notes"), { title, content });
+
+        document.getElementById("title-box").value = "";
+        document.getElementById("content-box").value = "";
+        closedialog();
+        loadNotes();
+    }
+
+    // ✅ Delete note from Firestore
+    async function deleteNote() {
+        const index = Number(document.querySelector(".opendialog").dataset.index);
+        const note = notes[index];
+        await deleteDoc(doc(db, "users", currentUser.uid, "notes", note.id));
+        closenote();
+        loadNotes();
+    }
+
+    // ✅ Edit note
+    function editNote() {
+        const index = Number(document.querySelector(".opendialog").dataset.index);
+        const note = notes[index];
+        opendialog();
+        document.getElementById("title-box").value = note.title;
+        document.getElementById("content-box").value = note.content;
+        deleteNote();
+    }
+
+    function opendialog() { document.querySelector(".dialogbox").showModal(); }
+    function closedialog() { document.querySelector(".dialogbox").close(); }
+
+    function renderNotes() {
+        const list = document.getElementById("notesList");
+        if (!list) return;
+        list.innerHTML = "";
+        notes.forEach((note, index) => {
+            const card = document.createElement("div");
+            card.innerText = note.title;
+            card.className = "notecard";
+            card.onclick = () => openNote(index);
+            list.appendChild(card);
+        });
+    }
+
+    function openNote(index) {
+        const note = notes[index];
+        const dialog = document.querySelector(".opendialog");
+        dialog.querySelector(".readtitle").innerText = note.title;
+        dialog.querySelector(".readcontent").innerText = note.content;
+        dialog.dataset.index = index;
+        dialog.showModal();
+        closeAI();
+    }
+
+    function closenote() { document.querySelector(".opendialog").close(); }
+
+    function updateStats() {
+        const total = notes.length;
+        const words = notes.reduce((acc, note) => acc + note.content.trim().split(/\s+/).filter(Boolean).length, 0);
+        const lastNote = notes[notes.length - 1];
+        const lastTitle = lastNote ? lastNote.title.slice(0, 8) + "..." : "—";
+        const el1 = document.getElementById("totalNotes");
+        const el2 = document.getElementById("totalWords");
+        const el3 = document.getElementById("lastSaved");
+        if (el1) el1.innerText = total;
+        if (el2) el2.innerText = words;
+        if (el3) el3.innerText = lastTitle;
+    }
+
+    // ===================== AI =====================
+    const GROQ_API_KEY = "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";
+
+    function openAI() {
+        currentNoteIndex = Number(document.querySelector(".opendialog").dataset.index);
+        const note = notes[currentNoteIndex];
+        document.getElementById("aiNoteTitle").innerText = note.title;
+        resetAIPanel();
+        document.getElementById("aiDialog").style.display = "block";
+        closenote();
+    }
+
+    function closeAI() { document.getElementById("aiDialog").style.display = "none"; }
+
+    function resetAIPanel() {
+        document.getElementById("aiResponse").style.display = "none";
+        document.getElementById("askBox").style.display = "none";
+        document.getElementById("userQuestion").value = "";
+        document.getElementById("aiResponseText").innerText = "";
+        document.getElementById("aiLoading").style.display = "none";
+    }
+
+    function showAskBox() { document.getElementById("askBox").style.display = "block"; }
+
+    async function callGemini(prompt) {
+        document.getElementById("aiLoading").style.display = "block";
+        document.getElementById("aiResponse").style.display = "none";
+        try {
+            const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_API_KEY}` },
+                body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages: [{ role: "user", content: prompt }] })
+            });
+            const data = await response.json();
+            document.getElementById("aiLoading").style.display = "none";
+            if (data.choices && data.choices[0].message.content) {
+                return data.choices[0].message.content;
+            } else {
+                showAIResponse("⚠️ Error: " + JSON.stringify(data));
+                return null;
+            }
+        } catch (err) {
+            document.getElementById("aiLoading").style.display = "none";
+            showAIResponse("⚠️ Network error: " + err.message);
+            return null;
+        }
+    }
+
+    async function summarizeNote() {
+        const note = notes[currentNoteIndex];
+        const prompt = `Summarize the following note in 3-4 clear sentences:\n\nTitle: ${note.title}\n\nContent: ${note.content}`;
+        const result = await callGemini(prompt);
+        showAIResponse(result);
+    }
+
+    async function askQuestion() {
+        const note = notes[currentNoteIndex];
+        const question = document.getElementById("userQuestion").value.trim();
+        if (!question) { alert("Please type a question first."); return; }
+        const prompt = `Here is a note:\n\nTitle: ${note.title}\nContent: ${note.content}\n\nAnswer this question based only on the note above:\n${question}`;
+        const result = await callGemini(prompt);
+        showAIResponse(result);
+    }
+
+    function showAIResponse(text) {
+        document.getElementById("aiResponseText").innerText = text;
+        document.getElementById("aiResponse").style.display = "block";
+    }
+
+    // ✅ Expose functions to HTML onclick buttons
+    window.savenote = savenote;
+    window.deleteNote = deleteNote;
+    window.editNote = editNote;
+    window.opendialog = opendialog;
+    window.closedialog = closedialog;
+    window.closenote = closenote;
+    window.openNote = openNote;
+    window.openAI = openAI;
+    window.closeAI = closeAI;
+    window.showAskBox = showAskBox;
+    window.summarizeNote = summarizeNote;
+    window.askQuestion = askQuestion;
+
+</script>
+
+</body>
+</html>
