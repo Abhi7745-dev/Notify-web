@@ -14,6 +14,7 @@ NOTIFY is a clean, minimal, dark-themed notes web app built entirely with pure H
 - 💾 Auto saved using localStorage — persists after refresh
 - 📊 Live stats showing total notes and total word count
 - 🎨 Smooth hover effects and animations throughout
+  
 
 ---
 
@@ -35,6 +36,7 @@ NOTIFY is a clean, minimal, dark-themed notes web app built entirely with pure H
 - [ ] Export notes as PDF or text
 - [ ] Rich text formatting support
 - [ ] Mobile responsive design
+
 
 ---
 
