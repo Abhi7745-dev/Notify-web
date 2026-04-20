@@ -110,17 +110,17 @@
     </dialog>
 
 
-<!-- ===================== FIREBASE + APP SCRIPT ===================== -->
+
 <script type="module">
 
-    // ✅ All imports at top
+   
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // ✅ Your Firebase config
+   
     const firebaseConfig = {
         apiKey: "AIzaSyDeb23nriXd2oYwv-nejYMvydLn0mv7_Gw",
         authDomain: "notify-378c4.firebaseapp.com",
@@ -138,7 +138,7 @@
     let notes = [];
     let currentNoteIndex = 0;
 
-    // ✅ Check login — redirect to login page if not logged in
+    
     onAuthStateChanged(auth, (user) => {
         if (user) {
             currentUser = user;
@@ -148,7 +148,7 @@
         }
     });
 
-    // ✅ Load notes from Firestore
+    
     async function loadNotes() {
         const snapshot = await getDocs(collection(db, "users", currentUser.uid, "notes"));
         notes = [];
@@ -157,7 +157,7 @@
         updateStats();
     }
 
-    // ✅ Save note to Firestore
+  
     async function savenote() {
         const title = document.getElementById("title-box").value.trim();
         const content = document.getElementById("content-box").value.trim();
@@ -171,7 +171,7 @@
         loadNotes();
     }
 
-    // ✅ Delete note from Firestore
+
     async function deleteNote() {
         const index = Number(document.querySelector(".opendialog").dataset.index);
         const note = notes[index];
@@ -180,7 +180,7 @@
         loadNotes();
     }
 
-    // ✅ Edit note
+
     function editNote() {
         const index = Number(document.querySelector(".opendialog").dataset.index);
         const note = notes[index];
@@ -231,7 +231,7 @@
         if (el3) el3.innerText = lastTitle;
     }
 
-    // ===================== AI =====================
+   
     const GROQ_API_KEY = "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";
 
     function openAI() {
@@ -300,7 +300,7 @@
         document.getElementById("aiResponse").style.display = "block";
     }
 
-    // ✅ Expose functions to HTML onclick buttons
+   
     window.savenote = savenote;
     window.deleteNote = deleteNote;
     window.editNote = editNote;
